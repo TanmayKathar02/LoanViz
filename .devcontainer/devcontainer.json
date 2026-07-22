@@ -1,0 +1,12 @@
+{
+     "name": "signoz-hackathon",
+     "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+     "features": {
+       "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+     },
+     "hostRequirements": {
+       "cpus": 4,
+       "memory": "16gb"
+     },
+     "forwardPorts": [8080, 4317, 4318, 8000]
+   }
