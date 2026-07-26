@@ -18,7 +18,6 @@ The entire AI reasoning process (agent steps, tool calls, token usage, latency) 
 
 ## 🛠️ Tech Stack
 
-ComponentTechnology
 - **Backend**FastAPI (Python)
 - **AI Agent**LangChain + LangGraph (Ollama)
 - **Frontend**Streamlit
