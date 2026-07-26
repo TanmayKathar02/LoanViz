@@ -75,7 +75,7 @@ bash
 ```
 curl -X POST http://localhost:8001/analyze \
 	-H "Content-Type: application/json" \
-	-d '{"principal":2000000,"annual_rate":8.5,"tenure_months":60,"monthly_income":50000,"loan_offer":"HDFC with processing fee"}'
+	-d '{"principal":2000000,"annual_rate":8.5,"tenure_months":60,"monthly_income":50000,"loan_offer":"SBI with processing fee"}'
 ```
 
 ### 2. See the Trace in SigNoz
