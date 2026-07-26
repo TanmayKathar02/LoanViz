@@ -1,77 +1,97 @@
-# LoanViz — Loan Analysis + Observability Demo
+# LoanViz – Transparent Loan Decisions with Full AI Observability
 
-LoanViz is a small demo that analyzes consumer loan offers using a lightweight LLM-based agent and demonstrates end-to-end observability (logs, traces, metrics) ingested into SigNoz for evaluation.
+## 🎯 The Problem
+STEM students in India take education loans without clarity on hidden fees, future EMIs, or risk. **40%+** report severe anxiety about repayment due to opaque loan terms and fine print.
 
-Why this repo
-- Shows a resilient LLM agent with deterministic fallback for production safety.
-- Instrumented with OpenTelemetry (traces, logs, metrics) and exported to SigNoz (ClickHouse).
-- Provides a reproducible deployment (`casting.yaml` + `casting.yaml.lock`) so judges can re-run Foundry/compose.
+---
 
-Repository layout (important files)
-- `casting.yaml` — Foundry installation manifest (SigNoz compose flavor).
-- `casting.yaml.lock` — Locked image tags for reproducible deployment (committed).
-- `pours/deployment/compose.yaml` — Local SigNoz compose manifest used by the deployment.
-- `pours/deployment/signoz_dashboard_loanviz.json` — Dashboard JSON with recommended panels.
-- `loanviz/backend/app.py` — FastAPI service, OpenTelemetry instrumentation and exporters.
-- `loanviz/backend/agent.py` — LLM agent (Ollama preferred) with deterministic fallback and runtime metrics (committed).
-- `loanviz/frontend` — Streamlit-based frontend that calls the backend.
+## 💡 The Solution
+**LoanViz** is an AI-powered loan assistant that:
 
-Run locally (quick)
-1. Ensure Docker is running.
-2. Start SigNoz (from repository root):
+- Calculates **EMI** instantly.
+- **Detects hidden fees** (processing, insurance, admin charges) from offer text.
+- **Assesses risk** (High/Medium/Low) based on EMI-to-income ratio.
+- **Explains every decision** – no black boxes.
+The entire AI reasoning process (agent steps, tool calls, token usage, latency) is **traced in real-time** via OpenTelemetry and visualized in **SigNoz**.
 
-```bash
-cd pours/deployment
-docker compose -f compose.yaml up -d
+---
+
+## 🛠️ Tech Stack
+
+ComponentTechnology**Backend**FastAPI (Python)**AI Agent**LangChain + LangGraph (Ollama)**Frontend**Streamlit**Observability**OpenTelemetry + OpenInference (LangChain instrumentation)**Monitoring**SigNoz (via Foundry / ClickHouse)**Deployment**Docker Compose (Foundry)
+
+---
+
+## 🚀 Quick Setup (Reproducible)
+
+### 1. Clone & Start SigNoz
+bash
+
+```
+git clone <your-repo>
+cd loanviz
+
+# Install Foundry & deploy SigNoz
+curl -fsSL https://signoz.io/foundry.sh | bash
+export PATH="$HOME/.local/bin:$PATH"
+foundryctl cast -f casting.yaml   # spins up SigNoz on port 8080
 ```
 
-3. Start the backend (inside repo):
+### 2. Set Environment Variables
+bash
 
-```bash
+```
+export OPENAI_API_KEY="your-deepseek-key"
+export OPENAI_BASE_URL="https://api.bluesminds.co"
+```
+
+### 3. Run the Backend
+bash
+
+```
 cd loanviz/backend
-. .venv/bin/activate
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
 uvicorn app:app --host 0.0.0.0 --port 8001
 ```
 
-4. Start the frontend (optional):
+### 4. Run the Frontend
+bash
 
-```bash
+```
 cd loanviz/frontend
-. .venv/bin/activate
-streamlit run app.py
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+streamlit run app.py --server.port 8502
 ```
 
-Generate test traffic
+---
 
-```bash
-curl -s -X POST http://localhost:8001/analyze -H 'Content-Type: application/json' -d '{"principal":500000,"annual_rate":7.5,"tenure_months":60,"monthly_income":50000,"loan_offer":"No hidden fees"}'
+## 🔍 How to Verify Observability (The Hackathon Win)
+
+### 1. Send a Test Request
+bash
+
 ```
-Run several requests to populate metrics/latency/fallbacks.
+curl -X POST http://localhost:8001/analyze \
+	-H "Content-Type: application/json" \
+	-d '{"principal":2000000,"annual_rate":8.5,"tenure_months":60,"monthly_income":50000,"loan_offer":"HDFC with processing fee"}'
+```
 
-SigNoz dashboard
-- UI: http://localhost:8080
-- Default test credentials used in this environment (for demo only): `ktanmay7777@gmail.com` / `Admin@tanmay123`.
-- If the provided import did not appear automatically, open the dashboard editor and import `pours/deployment/signoz_dashboard_loanviz.json` or create panels using these expressions:
-	- `sum(rate(loanviz.requests.count[1m]))` — request throughput
-	- `histogram_quantile(0.95, sum(rate(loanviz.requests.duration_bucket[1m])) by (le))` — p95 latency
-	- `sum(rate(loanviz.ollama.calls.count[1m]))`, `sum(rate(loanviz.ollama.calls.errors[1m]))`, `sum(rate(loanviz.ollama.fallbacks.count[1m]))` — Ollama health
-	- `sum by (recommendation) (rate(loanviz.recommendation.count[1m]))` — recommendation distribution
+### 2. See the Trace in SigNoz
 
-What the judge should evaluate
-- Backend health: `GET /health` returns `{"status":"ok"}`.
-- Observability: traces, logs, and metrics appear in SigNoz (check ClickHouse DBs `signoz_logs`, `signoz_traces`, `signoz_metrics`).
-- Agent robustness: when LLM returns non-JSON, deterministic EMI/risk fallback is used and a fallback metric `loanviz.ollama.fallbacks.count` increments.
+- Open `http://localhost:8080`
+- Go to **Traces** → filter by service `loanviz-agent`
+- Click the latest trace to view the **waterfall** showing:
 
-Files changed / committed
-- `loanviz/backend/agent.py` — added runtime metrics and robust parsing/fallbacks.
-- `casting.yaml.lock` — pinned image tags for reproducible deployment.
-- `pours/deployment/signoz_dashboard_loanviz.json` — dashboard JSON.
-- `README.md` — this file.
+- `loan_analysis_workflow` (root)
+- `calculate_emi` (child)
+- `detect_fees` (child)
+- `calculate_risk` (child)
 
-Notes
-- No sensitive secrets are committed.
-- For reproducible evaluation, run Foundry or `docker compose` using `casting.yaml` + `casting.yaml.lock`.
+### 3. Custom Dashboard (Import)
 
-If you want, I can:
-- Finalize and push a single clean commit containing the agent and README.
-- Attempt another automated dashboard import into SigNoz (I have credentials and can retry).
+- In SigNoz, go to **Dashboards** → **Import JSON**
+- Upload `pours/deployment/signoz_dashboard_loanviz.json`
+- See metrics: request throughput, p95 latency, hidden fee detection rate, risk distribution.
+
