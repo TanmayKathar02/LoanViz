@@ -72,7 +72,7 @@ streamlit run app.py --server.port 8502
 
 ---
 
-## 🔍 How to Verify Observability (The Hackathon Win)
+## 🔍 How to Verify Observability
 
 ### 1. Send a Test Request
 bash
