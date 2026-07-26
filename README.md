@@ -22,7 +22,7 @@ ComponentTechnology**Backend**FastAPI (Python)**AI Agent**LangChain + LangGraph 
 
 ---
 
-## 🚀 Quick Setup (Reproducible)
+## 🚀 Quick Setup 
 
 ### 1. Clone & Start SigNoz
 bash
