@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+/loanviz/**/.venv/
+/loanviz/backend/.venv/
+
+# Logs
+*.log
+nohup.out
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# System
+*.DS_Store

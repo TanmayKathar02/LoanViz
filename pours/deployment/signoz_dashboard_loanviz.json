@@ -1,0 +1,70 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "loanviz-signoz",
+    "title": "LoanViz Observability",
+    "tags": ["loanviz", "observability"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "10s",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "Request Throughput",
+        "id": 1,
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "refId": "A",
+            "expr": "sum(rate(loanviz.requests.count[1m]))",
+            "legendFormat": "req/s"
+          }
+        ]
+      },
+      {
+        "type": "graph",
+        "title": "Request Latency (ms)",
+        "id": 2,
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "refId": "A",
+            "expr": "histogram_quantile(0.95, sum(rate(loanviz.requests.duration_bucket[1m])) by (le))",
+            "legendFormat": "p95 (ms)"
+          }
+        ]
+      },
+      {
+        "type": "graph",
+        "title": "Ollama Calls / Errors / Fallbacks",
+        "id": 3,
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {"refId": "A", "expr": "sum(rate(loanviz.ollama.calls.count[1m]))", "legendFormat": "calls/s"},
+          {"refId": "B", "expr": "sum(rate(loanviz.ollama.calls.errors[1m]))", "legendFormat": "errors/s"},
+          {"refId": "C", "expr": "sum(rate(loanviz.ollama.fallbacks.count[1m]))", "legendFormat": "fallbacks/s"}
+        ]
+      },
+      {
+        "type": "table",
+        "title": "Recommendation Distribution",
+        "id": 4,
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {"refId": "A", "expr": "sum by (recommendation) (rate(loanviz.recommendation.count[1m]))"}
+        ]
+      },
+      {
+        "type": "logs",
+        "title": "Recent Logs (loanviz)",
+        "id": 5,
+        "gridPos": {"x": 0, "y": 16, "w": 24, "h": 10},
+        "targets": [
+          {"refId": "A", "query": "service.name:loanviz* OR service.name:loanviz-agent"}
+        ]
+      }
+    ]
+  },
+  "overwrite": true
+}
